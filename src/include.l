@@ -1,0 +1,11 @@
+(ir::include "src/libstd.l")
+(ir::include "src/read.l")
+
+(def included (list))
+(defun include (file)
+  (if (<= 0 (.indexOf included file))
+      (return-from include (list))
+      (.push included file))
+  (let ((fs (require 'fs)))
+    (let ((src (.readFileSync fs (.slice file 1 -1) 'utf-8)))
+      (return-from include (read src)))))

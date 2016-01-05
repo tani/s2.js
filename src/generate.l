@@ -1,46 +1,6 @@
 (ir::include "src/libstd.l")
-
-(defun tokenize (str)
-  (let ((op (new (RegExp "(\"(?:\\\\\"|[^\"])*\"|,@|[,'`()]|\\s)"))))
-    (defun sub (exp)
-      (let ((br (new (RegExp "[^\\s]"))))
-	(return-from sub (.test br exp))))
-    (return-from tokenize
-      (.filter (.split str op) sub))))
-
-(defun read (tokens)
-  (let ((result (list)) (cnt 1))
-    (while (or (eql (.at tokens 0) "'")
-	       (eql (.at tokens 0) "`")
-	       (eql (.at tokens 0) ",")
-	       (eql (.at tokens 0) ",@"))
-      (.push result (.shift tokens)))
-    (when (eql (.at tokens 0) "(")
-      (.push result (.shift tokens))
-      (while (< 0 cnt)
-	(.push result (.shift tokens))
-	(case (.at result (- (.length result) 1))
-	  (("(") (++ cnt))
-	  ((")") (-- cnt))))
-      (return-from read result))
-    (.push result (.shift tokens))
-    (return-from read result)))
-
-(defun parse (tokens)
-  (when (eql 0 (.length tokens)) (return-from parse (list)))
-  (let ((exp (read tokens)))
-    (case (.at exp 0)
-      (("'")  (return-from parse (.concat `((ir::quote     ,@(parse (.slice exp 1)))) (parse tokens))))
-      (("`")  (return-from parse (.concat `((ir::backquote ,@(parse (.slice exp 1)))) (parse tokens))))
-      ((",")  (return-from parse (.concat `((,@(list "ir::unquote")   ,@(parse (.slice exp 1)))) (parse tokens))))
-      ((",@") (return-from parse (.concat `((,@(list "ir::splice")    ,@(parse (.slice exp 1)))) (parse tokens))))
-      (("(")  (return-from parse (.concat (list (parse (.slice exp 1 -1))) (parse tokens))))
-      (otherwise (return-from parse (.concat (list (.at exp 0)) (parse tokens)))))))
-
-(defun include (file)
-  (let ((fs (require 'fs)))
-    (let ((src (.readFileSync fs (.slice file 1 -1) 'utf-8)))
-      (return-from include (parse (tokenize src))))))
+(ir::include "src/expand.l")
+(ir::include "src/include.l")
 
 (def macros (hash))
 (defun generateJS (exp)
@@ -179,35 +139,3 @@
 	   (true
 	    (return-from generateJS
 	      (+ func "(" (.join (.map (.slice exp 1) generateJS) ",")")")))))))
-
-(defun macroExpand (exp)
-  (cond ((not (.isArray Array exp))
-	 (return-from macroExpand (+ "'" exp "'")))
-	((eql (.length exp) 0)
-	 (return-from macroExpand ""))
-	((and (.isArray Array (.at exp 0)) (eql (.at (.at exp 0) 0) "ir::unquote"))
-	 (return-from macroExpand
-	   (+ ".concat([" (generateJS (.at (.at exp 0) 1)) "])"
-	      (macroExpand (.slice exp 1)))))
-	((and (.isArray Array (.at exp 0)) (eql (.at (.at exp 0) 0) "ir::splice"))
-	 (return-from macroExpand
-	   (+ ".concat(" (generateJS (.at (.at exp 0) 1)) ")"
-	      (macroExpand (.slice exp 1)))))
-	(true
-	 (if (.isArray Array (.at exp 0))
-	     (return-from macroExpand
-	       (+ ".concat([[]" (macroExpand (.at exp 0)) "])"
-		  (macroExpand (.slice exp 1))))
-	     (return-from macroExpand
-	       (+ ".concat([" (macroExpand (.at exp 0)) "])"
-		  (macroExpand (.slice exp 1))))))))
-
-(defun main ()
-  (let ((fs   (require 'fs))
-	(file (.at (@ process argv) (- (@ process argv length) 1)))
-	(config "#!/usr/bin/env node\n"))
-    (let ((lisp (.readFileSync fs file 'utf-8)))
-      (let ((js (generateJS `((ir::function () (ir::block ,@(parse (tokenize lisp))))))))
-	(.log console (+ config js))))))
-
-(main)

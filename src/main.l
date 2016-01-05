@@ -1,0 +1,12 @@
+(ir::include "src/libstd.l")
+(ir::include "src/read.l")
+(ir::include "src/generate.l")
+
+(defun main ()
+  (let ((fs (require 'fs))
+	(file (.at (@ process argv) (- (@ process argv length) 1)))
+	(config "#!/usr/bin/env node\n"))
+    (let ((src (.readFileSync fs file 'utf-8)))
+      (let ((js (generateJS (read (+ "(ir::function () (ir::block" src "))")))))
+	(.log console (+ config js))))))
+(main)

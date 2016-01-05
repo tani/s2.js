@@ -1064,11 +1064,15 @@ throw err;
 })
  */;
 };
+/** "src/read.l" **/{
+/** "src/libstd.l" **/{
+;
+};
 var tokenize = (function(str){
 {
 try{
 (function(op){
-__result__ = str.split(op).filter((function(exp){
+var sub = (function(exp){
 {
 try{
 (function(br){
@@ -1082,7 +1086,8 @@ throw err;
 }
 }
 };
-}));throw 'tokenize';
+});
+__result__ = str.split(op).filter(sub);throw 'tokenize';
 })(new RegExp("(\"(?:\\\\\"|[^\"])*\"|,@|[,'`()]|\\s)"));
 }catch(err){
 if(err === 'tokenize'){
@@ -1093,7 +1098,7 @@ throw err;
 }
 };
 });
-var read = (function(tokens){
+var readterm = (function(tokens){
 {
 try{
 (function(result,cnt){
@@ -1116,13 +1121,13 @@ if(((")" === result[(result.length - 1)]))){
 };
 };
 };
-__result__ = result;throw 'read';
+__result__ = result;throw 'readterm';
 };
 result.push(tokens.shift());
-__result__ = result;throw 'read';
+__result__ = result;throw 'readterm';
 })([],1);
 }catch(err){
-if(err === 'read'){
+if(err === 'readterm'){
 return __result__;
 }else{
 throw err;
@@ -1172,7 +1177,7 @@ __result__ = [exp[0]].concat(parse(tokens));throw 'parse';
 };
 };
 };
-})(read(tokens));
+})(readterm(tokens));
 }catch(err){
 if(err === 'parse'){
 return __result__;
@@ -1182,12 +1187,97 @@ throw err;
 }
 };
 });
+var read = (function(str){
+{
+try{
+__result__ = parse(tokenize(str));throw 'read';
+__result__ = parse(tokenize(str))[0];throw 'read';
+}catch(err){
+if(err === 'read'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+};
+/** "src/generate.l" **/{
+/** "src/libstd.l" **/{
+;
+};
+/** "src/expand.l" **/{
+/** "src/libstd.l" **/{
+;
+};
+/** "src/generate.l" **/{
+;
+};
+var macroExpand = (function(exp){
+{
+try{
+if(! Array.isArray(exp)){
+{
+__result__ = ("'" + exp + "'");throw 'macroExpand';
+};
+}else{
+if((exp.length === 0)){
+{
+__result__ = "";throw 'macroExpand';
+};
+}else{
+if((Array.isArray(exp[0]) && (exp[0][0] === "ir::unquote"))){
+{
+__result__ = (".concat([" + generateJS(exp[0][1]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
+};
+}else{
+if((Array.isArray(exp[0]) && (exp[0][0] === "ir::splice"))){
+{
+__result__ = (".concat(" + generateJS(exp[0][1]) + ")" + macroExpand(exp.slice(1)));throw 'macroExpand';
+};
+}else{
+if(true){
+{
+if(Array.isArray(exp[0])){
+__result__ = (".concat([[]" + macroExpand(exp[0]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
+}else{
+__result__ = (".concat([" + macroExpand(exp[0]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
+};
+};
+};
+};
+};
+};
+};
+}catch(err){
+if(err === 'macroExpand'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+};
+/** "src/include.l" **/{
+/** "src/libstd.l" **/{
+;
+};
+/** "src/read.l" **/{
+;
+};
+var included = [];
 var include = (function(file){
 {
 try{
+if((0 <= included.indexOf(file))){
+__result__ = [];throw 'include';
+}else{
+included.push(file);
+};
 (function(fs){
 (function(src){
-__result__ = parse(tokenize(src));throw 'include';
+__result__ = read(src);throw 'include';
 })(fs.readFileSync(file.slice(1,-1),"utf-8"));
 })(require("fs"));
 }catch(err){
@@ -1199,6 +1289,7 @@ throw err;
 }
 };
 });
+};
 var macros = {};
 var generateJS = (function(exp){
 {
@@ -1437,59 +1528,15 @@ throw err;
 }
 };
 });
-var macroExpand = (function(exp){
-{
-try{
-if(! Array.isArray(exp)){
-{
-__result__ = ("'" + exp + "'");throw 'macroExpand';
 };
-}else{
-if((exp.length === 0)){
-{
-__result__ = "";throw 'macroExpand';
-};
-}else{
-if((Array.isArray(exp[0]) && (exp[0][0] === "ir::unquote"))){
-{
-__result__ = (".concat([" + generateJS(exp[0][1]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
-};
-}else{
-if((Array.isArray(exp[0]) && (exp[0][0] === "ir::splice"))){
-{
-__result__ = (".concat(" + generateJS(exp[0][1]) + ")" + macroExpand(exp.slice(1)));throw 'macroExpand';
-};
-}else{
-if(true){
-{
-if(Array.isArray(exp[0])){
-__result__ = (".concat([[]" + macroExpand(exp[0]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
-}else{
-__result__ = (".concat([" + macroExpand(exp[0]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
-};
-};
-};
-};
-};
-};
-};
-}catch(err){
-if(err === 'macroExpand'){
-return __result__;
-}else{
-throw err;
-}
-}
-};
-});
 var main = (function(){
 {
 try{
 (function(fs,file,config){
-(function(lisp){
+(function(src){
 (function(js){
 console.log((config + js));
-})(generateJS([].concat([[].concat(['ir::function']).concat([[]]).concat([[].concat(['ir::block']).concat(parse(tokenize(lisp)))])])));
+})(generateJS(read(("(ir::function () (ir::block" + src + "))"))));
 })(fs.readFileSync(file,"utf-8"));
 })(require("fs"),process.argv[(process.argv.length - 1)],"#!/usr/bin/env node\n");
 }catch(err){
