@@ -1065,9 +1065,7 @@ throw err;
  */;
 };
 /** "src/read.l" **/{
-/** "src/libstd.l" **/{
 ;
-};
 var tokenize = (function(str){
 {
 try{
@@ -1088,7 +1086,7 @@ throw err;
 };
 });
 __result__ = str.split(op).filter(sub);throw 'tokenize';
-})(new RegExp("(\"(?:\\\\\"|[^\"])*\"|,@|[,'`()]|\\s)"));
+})(RegExp("(\"(?:\\\\\"|[^\"])*\"|,@|[,'`()]|\\s)"));
 }catch(err){
 if(err === 'tokenize'){
 return __result__;
@@ -1202,17 +1200,11 @@ throw err;
 };
 });
 };
-/** "src/generate.l" **/{
-/** "src/libstd.l" **/{
+/** "src/compile.l" **/{
 ;
-};
 /** "src/expand.l" **/{
-/** "src/libstd.l" **/{
 ;
-};
-/** "src/generate.l" **/{
 ;
-};
 var macroExpand = (function(exp){
 {
 try{
@@ -1228,12 +1220,12 @@ __result__ = "";throw 'macroExpand';
 }else{
 if((Array.isArray(exp[0]) && (exp[0][0] === "ir::unquote"))){
 {
-__result__ = (".concat([" + generateJS(exp[0][1]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
+__result__ = (".concat([" + compile(exp[0][1]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
 };
 }else{
 if((Array.isArray(exp[0]) && (exp[0][0] === "ir::splice"))){
 {
-__result__ = (".concat(" + generateJS(exp[0][1]) + ")" + macroExpand(exp.slice(1)));throw 'macroExpand';
+__result__ = (".concat(" + compile(exp[0][1]) + ")" + macroExpand(exp.slice(1)));throw 'macroExpand';
 };
 }else{
 if(true){
@@ -1260,12 +1252,8 @@ throw err;
 });
 };
 /** "src/include.l" **/{
-/** "src/libstd.l" **/{
 ;
-};
-/** "src/read.l" **/{
 ;
-};
 var included = [];
 var include = (function(file){
 {
@@ -1291,133 +1279,133 @@ throw err;
 });
 };
 var macros = {};
-var generateJS = (function(exp){
+var compile = (function(exp){
 {
 try{
 if(! Array.isArray(exp)){
-__result__ = exp;throw 'generateJS';
+__result__ = exp;throw 'compile';
 };
 if(("string" === typeof exp[0])){
-var func = exp[0].replace(new RegExp("ir::"),"");
+var func = exp[0].replace(RegExp("ir::"),"");
 }else{
-var func = generateJS(exp[0]);
+var func = compile(exp[0]);
 };
 if(((undefined === exp[0]))){
 {
-__result__ = [];throw 'generateJS';
+__result__ = [];throw 'compile';
 };
 }else{
 if((("ir::function" === exp[0]) || ("ir::function*" === exp[0]))){
 {
 (function(args,statement){
-__result__ = ("(" + func + "(" + args.join(",") + ")" + statement + ")");throw 'generateJS';
-})(exp[1].map(generateJS),generateJS(exp[2]));
+__result__ = ("(" + func + "(" + args.join(",") + ")" + statement + ")");throw 'compile';
+})(exp[1].map(compile),compile(exp[2]));
 };
 }else{
 if((("ir::var" === exp[0]) || ("ir::let" === exp[0]) || ("ir::const" === exp[0]))){
 {
 (function(variable,value){
-__result__ = (func + " " + variable + " = " + value);throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]));
+__result__ = (func + " " + variable + " = " + value);throw 'compile';
+})(compile(exp[1]),compile(exp[2]));
 };
 }else{
 if((("ir::if" === exp[0]))){
 {
 if((exp.length === 4)){
 (function(condition,statement1,statement2){
-__result__ = ("if(" + condition + ")" + statement1 + "else" + statement2);throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]),generateJS(exp[3]));
+__result__ = ("if(" + condition + ")" + statement1 + "else" + statement2);throw 'compile';
+})(compile(exp[1]),compile(exp[2]),compile(exp[3]));
 }else{
 (function(condition,statement){
-__result__ = ("if(" + condition + ")" + statement);throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]));
+__result__ = ("if(" + condition + ")" + statement);throw 'compile';
+})(compile(exp[1]),compile(exp[2]));
 };
 };
 }else{
 if((("ir::do" === exp[0]))){
 {
 (function(statement,condition){
-__result__ = ("do" + statement + "while(" + condition + ")");throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[3]));
+__result__ = ("do" + statement + "while(" + condition + ")");throw 'compile';
+})(compile(exp[1]),compile(exp[3]));
 };
 }else{
 if((("ir::for" === exp[0]))){
 {
 (function(init,condition,final,statement){
-__result__ = ("for(" + init + ";" + condition + ";" + final + ")" + statement);throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]),generateJS(exp[3]),generateJS(exp[4]));
+__result__ = ("for(" + init + ";" + condition + ";" + final + ")" + statement);throw 'compile';
+})(compile(exp[1]),compile(exp[2]),compile(exp[3]),compile(exp[4]));
 };
 }else{
 if((("ir::while" === exp[0]))){
 {
 (function(condition,statement){
-__result__ = ("while(" + condition + ")" + statement);throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]));
+__result__ = ("while(" + condition + ")" + statement);throw 'compile';
+})(compile(exp[1]),compile(exp[2]));
 };
 }else{
 if((("ir::block" === exp[0]))){
 {
 (function(statements){
-__result__ = ("{\n" + statements.join(";\n") + ";\n}");throw 'generateJS';
-})(exp.slice(1).map(generateJS));
+__result__ = ("{\n" + statements.join(";\n") + ";\n}");throw 'compile';
+})(exp.slice(1).map(compile));
 };
 }else{
 if((("ir::named-block" === exp[0]))){
 {
 (function(tag,statements){
-__result__ = ("{\n" + "try{\n" + statements.join(";\n") + ";\n}" + "catch(err){\n" + "if(err === '" + tag + "'){\n" + "return __result__;\n" + "}else{\n" + "throw err;\n" + "}\n}\n}");throw 'generateJS';
-})(generateJS(exp[1]),exp.slice(2).map(generateJS));
+__result__ = ("{\n" + "try{\n" + statements.join(";\n") + ";\n}" + "catch(err){\n" + "if(err === '" + tag + "'){\n" + "return __result__;\n" + "}else{\n" + "throw err;\n" + "}\n}\n}");throw 'compile';
+})(compile(exp[1]),exp.slice(2).map(compile));
 };
 }else{
 if((("ir::return-from" === exp[0]))){
 {
 (function(tag,value){
-__result__ = ("__result__ = " + value + ";throw '" + tag + "'");throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]));
+__result__ = ("__result__ = " + value + ";throw '" + tag + "'");throw 'compile';
+})(compile(exp[1]),compile(exp[2]));
 };
 }else{
 if((("ir::return" === exp[0]) || ("ir::break" === exp[0]) || ("ir::continue" === exp[0]) || ("ir::yield" === exp[0]) || ("ir::delete" === exp[0]) || ("ir::typeof" === exp[0]))){
 {
 if((exp.length === 1)){
-__result__ = func;throw 'generateJS';
+__result__ = func;throw 'compile';
 }else{
-__result__ = (func + " " + generateJS(exp[1]));throw 'generateJS';
+__result__ = (func + " " + compile(exp[1]));throw 'compile';
 };
 };
 }else{
 if((("ir::instanceof" === exp[0]) || ("ir::in" === exp[0]) || ("ir::===" === exp[0]) || ("ir::==" === exp[0]) || ("ir::&&" === exp[0]) || ("ir::||" === exp[0]) || ("ir::+" === exp[0]) || ("ir::-" === exp[0]) || ("ir::*" === exp[0]) || ("ir::/" === exp[0]) || ("ir::%" === exp[0]) || ("ir::>" === exp[0]) || ("ir::>=" === exp[0]) || ("ir::<" === exp[0]) || ("ir::<=" === exp[0]) || ("ir::<<" === exp[0]) || ("ir::>>" === exp[0]) || ("ir::>>>" === exp[0]) || ("ir::&" === exp[0]) || ("ir::|" === exp[0]) || ("ir::^" === exp[0]))){
 {
 (function(args){
-__result__ = ("(" + args.join((" " + func + " ")) + ")");throw 'generateJS';
-})(exp.slice(1).map(generateJS));
+__result__ = ("(" + args.join((" " + func + " ")) + ")");throw 'compile';
+})(exp.slice(1).map(compile));
 };
 }else{
 if((("ir::++" === exp[0]) || ("ir::--" === exp[0]))){
 {
 (function(obj){
-__result__ = (func + obj);throw 'generateJS';
-})(generateJS(exp[1]));
+__result__ = (func + obj);throw 'compile';
+})(compile(exp[1]));
 };
 }else{
 if((("ir::!" === exp[0]) || ("ir::~" === exp[0]) || ("ir::new" === exp[0]))){
 {
 (function(obj){
-__result__ = (func + " " + obj);throw 'generateJS';
-})(generateJS(exp[1]));
+__result__ = (func + " " + obj);throw 'compile';
+})(compile(exp[1]));
 };
 }else{
 if((("ir::nth" === exp[0]))){
 {
 (function(array,key){
-__result__ = (array + "[" + key + "]");throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]));
+__result__ = (array + "[" + key + "]");throw 'compile';
+})(compile(exp[1]),compile(exp[2]));
 };
 }else{
 if((("ir::set" === exp[0]))){
 {
 (function(variable,value){
-__result__ = (variable + " = " + value);throw 'generateJS';
-})(generateJS(exp[1]),generateJS(exp[2]));
+__result__ = (variable + " = " + value);throw 'compile';
+})(compile(exp[1]),compile(exp[2]));
 };
 }else{
 if((("ir::hash" === exp[0]))){
@@ -1426,22 +1414,22 @@ if((("ir::hash" === exp[0]))){
 for(var key = 0;(key < args.length);key = (key + 2)){
 results.push((args[key] + ":" + args[(key)]));
 };
-__result__ = ("{" + results.join(" , ") + "}");throw 'generateJS';
-})(exp.slice(1).map(generateJS),[]);
+__result__ = ("{" + results.join(" , ") + "}");throw 'compile';
+})(exp.slice(1).map(compile),[]);
 };
 }else{
 if((("ir::array" === exp[0]))){
 {
 (function(array){
-__result__ = ("[" + array.join(" , ") + "]");throw 'generateJS';
-})(exp.slice(1).map(generateJS));
+__result__ = ("[" + array.join(" , ") + "]");throw 'compile';
+})(exp.slice(1).map(compile));
 };
 }else{
 if((("ir::dot" === exp[0]))){
 {
 (function(arg){
-__result__ = arg.join(".");throw 'generateJS';
-})(exp.slice(1).map(generateJS));
+__result__ = arg.join(".");throw 'compile';
+})(exp.slice(1).map(compile));
 };
 }else{
 if((("ir::defmacro" === exp[0]))){
@@ -1449,47 +1437,51 @@ if((("ir::defmacro" === exp[0]))){
 (function(name,args,statements){
 (function(macro){
 macros[name] = eval(macro);
-__result__ = ("/* MACRO: " + name + "\n" + macro + "\n */");throw 'generateJS';
+__result__ = ("/* MACRO: " + name + "\n" + macro + "\n */");throw 'compile';
 })(("(function(" + args.join(",") + "){\n" + statements.join(";\n") + ";\n})"));
-})(generateJS(exp[1]),exp[2].map(generateJS),exp.slice(3).map(generateJS));
+})(compile(exp[1]),exp[2].map(compile),exp.slice(3).map(compile));
 };
 }else{
 if((("ir::quote" === exp[0]))){
 {
 (function(arg){
-__result__ = JSON.stringify(arg);throw 'generateJS';
+__result__ = JSON.stringify(arg);throw 'compile';
 })(exp[1]);
 };
 }else{
 if((("ir::backquote" === exp[0]))){
 {
-__result__ = ("[]" + macroExpand(exp[1]));throw 'generateJS';
+__result__ = ("[]" + macroExpand(exp[1]));throw 'compile';
 };
 }else{
 if((("ir::include" === exp[0]))){
 {
 (function(module){
-__result__ = ("/** " + module + " **/{\n" + include(module).map(generateJS).join(";\n") + ";\n}");throw 'generateJS';
-})(generateJS(exp[1]));
+if((0 === module.length)){
+__result__ = "";throw 'compile';
+}else{
+__result__ = ("/** " + exp[1] + " **/{\n" + module.join(";\n") + ";\n}");throw 'compile';
+};
+})(include(compile(exp[1])).map(compile));
 };
 }else{
 if(true){
 {
 if((exp[0] in macros)){
 {
-__result__ = generateJS(macros[exp[0]].apply(this,exp.slice(1)));throw 'generateJS';
+__result__ = compile(macros[exp[0]].apply(this,exp.slice(1)));throw 'compile';
 };
 }else{
 if((func[0] === ".")){
 {
 (function(variable,args){
-__result__ = (variable + func + "(" + args.join(",") + ")");throw 'generateJS';
-})(generateJS(exp[1]),exp.slice(2).map(generateJS));
+__result__ = (variable + func + "(" + args.join(",") + ")");throw 'compile';
+})(compile(exp[1]),exp.slice(2).map(compile));
 };
 }else{
 if(true){
 {
-__result__ = (func + "(" + exp.slice(1).map(generateJS).join(",") + ")");throw 'generateJS';
+__result__ = (func + "(" + exp.slice(1).map(compile).join(",") + ")");throw 'compile';
 };
 };
 };
@@ -1520,7 +1512,7 @@ __result__ = (func + "(" + exp.slice(1).map(generateJS).join(",") + ")");throw '
 };
 };
 }catch(err){
-if(err === 'generateJS'){
+if(err === 'compile'){
 return __result__;
 }else{
 throw err;
@@ -1536,7 +1528,7 @@ try{
 (function(src){
 (function(js){
 console.log((config + js));
-})(generateJS(read(("(ir::function () (ir::block" + src + "))"))));
+})(compile(read(("(ir::function () (ir::block" + src + "))"))));
 })(fs.readFileSync(file,"utf-8"));
 })(require("fs"),process.argv[(process.argv.length - 1)],"#!/usr/bin/env node\n");
 }catch(err){

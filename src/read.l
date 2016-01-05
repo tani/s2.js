@@ -1,7 +1,7 @@
 (ir::include "src/libstd.l")
 
 (defun tokenize (str)
-  (let ((op (new (RegExp "(\"(?:\\\\\"|[^\"])*\"|,@|[,'`()]|\\s)"))))
+  (let ((op (RegExp "(\"(?:\\\\\"|[^\"])*\"|,@|[,'`()]|\\s)")))
     (defun sub (exp)
       (let ((br (new (RegExp "[^\\s]"))))
 	(return-from sub (.test br exp))))

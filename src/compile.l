@@ -7,7 +7,7 @@
   (unless (.isArray Array exp)
     (return-from compile exp))
   (if (eql 'string (typeof (.at exp 0)))
-      (def func (.replace (.at exp 0) (new (RegExp "ir::")) ""))
+      (def func (.replace (.at exp 0) (RegExp "ir::") ""))
       (def func (compile (.at exp 0))))
   (case (.at exp 0)
     ((undefined) (return-from compile (list)))

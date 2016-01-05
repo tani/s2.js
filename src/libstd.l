@@ -21,7 +21,8 @@
 (defmacro return	(:rest args) (return `(ir::return ,@args)))
 (defmacro typeof	(:rest args) (return `(ir::typeof ,@args)))
 (defmacro yield		(:rest args) (return `(ir::yield ,@args)))
-(defmacro throw		(:rest args) (return `(ir::throw ,@args))) (defmacro break		(:rest args) (return `(ir::break ,@args)))
+(defmacro throw		(:rest args) (return `(ir::throw ,@args)))
+(defmacro break		(:rest args) (return `(ir::break ,@args)))
 (defmacro continue	(:rest args) (return `(ir::continue ,@args)))
 (defmacro member	(:rest args) (return `(ir::in ,@args)))
 (defmacro eql		(:rest args) (return `(ir::=== ,@args)))
@@ -50,6 +51,7 @@
 (defmacro instanceof	(:rest args) (return `(ir::instanceof ,@args)))
 (defmacro .at		(:rest args) (return `(ir::nth ,@args)))
 (defmacro .length       (:rest args) (return `(ir::dot ,@args length)))
+
 (defmacro if (condition :rest statements)
   (return
     `(ir::if ,condition
