@@ -1,5 +1,5 @@
 (ir::include "src/libstd.l")
-(ir::include "src/generate.l")
+(ir::include "src/compile.l")
 
 (defun macroExpand (exp)
   (cond ((not (.isArray Array exp))
@@ -8,11 +8,11 @@
 	 (return-from macroExpand ""))
 	((and (.isArray Array (.at exp 0)) (eql (.at (.at exp 0) 0) "ir::unquote"))
 	 (return-from macroExpand
-	   (+ ".concat([" (generateJS (.at (.at exp 0) 1)) "])"
+	   (+ ".concat([" (compile (.at (.at exp 0) 1)) "])"
 	      (macroExpand (.slice exp 1)))))
 	((and (.isArray Array (.at exp 0)) (eql (.at (.at exp 0) 0) "ir::splice"))
 	 (return-from macroExpand
-	   (+ ".concat(" (generateJS (.at (.at exp 0) 1)) ")"
+	   (+ ".concat(" (compile (.at (.at exp 0) 1)) ")"
 	      (macroExpand (.slice exp 1)))))
 	(true
 	 (if (.isArray Array (.at exp 0))
