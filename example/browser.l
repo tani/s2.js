@@ -12,8 +12,8 @@
 
 (defun main ()
   (let ((scripts (.getElementsByTagName document "script")))
-    (for ((i 0) (< i (.length scripts)) (set i (+ i 1)))
-	 (when (eql "text/lisp" (@ (.at scripts i) type))
-	   (let ((src (@ (.at scripts i) innerHTML)))
-	     (eval (+ (compile (read (+ "(ir::function () (ir::block " src "))")))) ";"))))))
+    (for ((i 0) (< i (.-length scripts)) (set i (+ i 1)))
+	 (when (eql "text/lisp" (.-type (nth scripts i)))
+	   (let ((src (.-innerHTML (nth scripts i))))
+	     (eval (+ (compile (read (+ "(ir::function () (ir::block " src "))"))) ";")))))))
 (main)

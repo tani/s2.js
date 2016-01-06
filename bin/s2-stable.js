@@ -777,7 +777,7 @@ throw err;
 };
 })
  */;
-/* MACRO: .at
+/* MACRO: nth
 (function(){
 {
 try{
@@ -789,7 +789,7 @@ args.push(arguments[i]);
 };
 return [].concat(['ir::nth']).concat(args);
 }catch(err){
-if(err === '.at'){
+if(err === 'nth'){
 return __result__;
 }else{
 throw err;
@@ -1472,6 +1472,13 @@ if((exp[0] in macros)){
 __result__ = compile(macros[exp[0]].apply(this,exp.slice(1)));throw 'compile';
 };
 }else{
+if((func.slice(0,2) === ".-")){
+{
+(function(args){
+__result__ = (args.reverse().join(".") + "." + func.slice(2));throw 'compile';
+})(exp.slice(1).map(compile));
+};
+}else{
 if((func[0] === ".")){
 {
 (function(variable,args){
@@ -1482,6 +1489,7 @@ __result__ = (variable + func + "(" + args.join(",") + ")");throw 'compile';
 if(true){
 {
 __result__ = (func + "(" + exp.slice(1).map(compile).join(",") + ")");throw 'compile';
+};
 };
 };
 };

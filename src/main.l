@@ -4,7 +4,7 @@
 
 (defun main ()
   (let ((fs (require 'fs))
-	(file (.at (@ process argv) (- (@ process argv length) 1)))
+	(file (nth (.-argv process) (- (.-length argv process) 1)))
 	(config "#!/usr/bin/env node\n"))
     (let ((src (.readFileSync fs file 'utf-8)))
       (let ((js (compile (read (+ "(ir::function () (ir::block" src "))")))))

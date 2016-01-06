@@ -2,11 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8"/>
-    <script type="text/lisp">
-      (.log console (+ 1 2 3 4))
-    </script>
-    <script type="text/javascript" src="b6.js"></script>
     <title>Document</title>
   </head>
-  <body></body>
+  <body>
+    <textarea cols="30" id="src" rows="10">(alert (+ 1 1))</textarea><br>
+    <button id="btn">Eval</button>
+    <script type="text/lisp">
+      (defun func ()
+        (let ((src (.-value (.getElementById document "src"))))
+           (eval (compile (read (+ "(lambda ()" src ")"))))))
+      (let ((btn (.getElementById document "btn")))
+        (set (.-onclick btn) func))
+    </script>
+    <script type="text/javascript" src="b6.js"></script>
+  </body>
 </html>
