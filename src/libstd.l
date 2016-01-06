@@ -89,8 +89,8 @@
     `(ir::while ,condition (ir::block ,@body))))
 
 (defmacro let (defs :rest body)
-  (def vars (.map defs (lambda (def) (return (nth def 0)))))
-  (def vals (.map defs (lambda (def) (return (nth def 1)))))
+  (def vars (.map defs (lambda (d) (return (nth d 0)))))
+  (def vals (.map defs (lambda (d) (return (nth d 1)))))
   (return `((lambda ,vars ,@body) ,@vals)))
 
 (defmacro cond (:rest statements)

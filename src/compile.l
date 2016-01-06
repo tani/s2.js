@@ -1,8 +1,5 @@
 (ir::include "src/libstd.l")
-(ir::include "src/expand.l")
-(ir::include "src/include.l")
 
-(def macros (hash))
 (defun compile (exp)
   (unless (.isArray Array exp)
     (return-from compile exp))
@@ -107,30 +104,13 @@
     (("ir::array")
      (let ((array (.map (.slice exp 1) compile)))
        (return-from compile (+ "[" (.join array " , ") "]"))))
-    (("ir::defmacro")
-     (let ((name (compile (nth exp 1)))
-	   (args (.map (nth exp 2) compile))
-	   (statements (.map (.slice exp 3) compile)))
-       (let ((macro (+ "(function(" (.join args ",") "){\n"
-		       (.join statements ";\n")";\n})")))
-	 (set (nth macros name) (eval macro))
-	 (return-from compile (+ "/* MACRO: " name "\n" macro "\n */")))))
     (("ir::quote")
      (let ((arg (nth exp 1)))
        (return-from compile (.stringify JSON arg))))
     (("ir::backquote")
-     (return-from compile (+ "[]" (macroExpand (nth exp 1)))))
-    (("ir::include")
-     (let ((module (.map (include (compile (nth exp 1))) compile)))
-       (if (eql 0 (.-length module))
-	   (return-from compile "")
-	   (return-from compile
-	     (+ "/** " (nth exp 1) " **/{\n" (.join module  ";\n") ";\n}")))))
+     (return-from compile (+ "[]" (expandBackquote (nth exp 1)))))
     (otherwise
-     (cond ((member (nth exp 0) macros)
-	    (return-from compile
-	      (compile (.apply (nth macros (nth exp 0)) this (.slice exp 1)))))
-	   ((eql (.slice func 0 2) ".-")
+     (cond ((eql (.slice func 0 2) ".-")
 	    (let ((args (.map (.slice exp 1) compile)))
 	      (return-from compile
 		(+ (.join (.reverse args) ".") "." (.slice func 2)))))
@@ -142,3 +122,25 @@
 	   (true
 	    (return-from compile
 	      (+ func "(" (.join (.map (.slice exp 1) compile) ",")")")))))))
+
+(defun expandBackquote (exp)
+  (cond ((not (.isArray Array exp))
+	 (return-from expandBackquote (+ "'" exp "'")))
+	((eql (.-length exp) 0)
+	 (return-from expandBackquote ""))
+	((and (.isArray Array (nth exp 0)) (eql (nth (nth exp 0) 0) "ir::unquote"))
+	 (return-from expandBackquote
+	   (+ ".concat([" (compile (nth (nth exp 0) 1)) "])"
+	      (expandBackquote (.slice exp 1)))))
+	((and (.isArray Array (nth exp 0)) (eql (nth (nth exp 0) 0) "ir::splice"))
+	 (return-from expandBackquote
+	   (+ ".concat(" (compile (nth (nth exp 0) 1)) ")"
+	      (expandBackquote (.slice exp 1)))))
+	(true
+	 (if (.isArray Array (nth exp 0))
+	     (return-from expandBackquote
+	       (+ ".concat([[]" (expandBackquote (nth exp 0)) "])"
+		  (expandBackquote (.slice exp 1))))
+	     (return-from expandBackquote
+	       (+ ".concat([" (expandBackquote (nth exp 0)) "])"
+		  (expandBackquote (.slice exp 1))))))))

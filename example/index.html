@@ -10,7 +10,7 @@
     <script type="text/lisp">
       (defun func ()
         (let ((src (.-value (.getElementById document "src"))))
-           (eval (compile (read (+ "(lambda ()" src ")"))))))
+           (eval (transpile (+ "(lambda ()" src ")")))))
       (let ((btn (.getElementById document "btn")))
         (set (.-onclick btn) func))
     </script>

@@ -884,11 +884,11 @@ for(var i = 1;(i < arguments.length);i = (i + 1)){
 body.push(arguments[i]);
 };
 };
-var vars = defs.map((function(def){
-return def[0];
+var vars = defs.map((function(d){
+return d[0];
 }));
-var vals = defs.map((function(def){
-return def[1];
+var vals = defs.map((function(d){
+return d[1];
 }));
 return [].concat([[].concat(['lambda']).concat([vars]).concat(body)]).concat(vals);
 }catch(err){
@@ -1096,83 +1096,6 @@ throw err;
 };
 /** "src/compile.l" **/{
 ;
-/** "src/expand.l" **/{
-;
-;
-var macroExpand = (function(exp){
-{
-try{
-if(! Array.isArray(exp)){
-{
-__result__ = ("'" + exp + "'");throw 'macroExpand';
-};
-}else{
-if((exp.length === 0)){
-{
-__result__ = "";throw 'macroExpand';
-};
-}else{
-if((Array.isArray(exp[0]) && (exp[0][0] === "ir::unquote"))){
-{
-__result__ = (".concat([" + compile(exp[0][1]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
-};
-}else{
-if((Array.isArray(exp[0]) && (exp[0][0] === "ir::splice"))){
-{
-__result__ = (".concat(" + compile(exp[0][1]) + ")" + macroExpand(exp.slice(1)));throw 'macroExpand';
-};
-}else{
-if(true){
-{
-if(Array.isArray(exp[0])){
-__result__ = (".concat([[]" + macroExpand(exp[0]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
-}else{
-__result__ = (".concat([" + macroExpand(exp[0]) + "])" + macroExpand(exp.slice(1)));throw 'macroExpand';
-};
-};
-};
-};
-};
-};
-};
-}catch(err){
-if(err === 'macroExpand'){
-return __result__;
-}else{
-throw err;
-}
-}
-};
-});
-};
-/** "src/include.l" **/{
-;
-;
-var included = [];
-var include = (function(file){
-{
-try{
-if((0 <= included.indexOf(file))){
-__result__ = [];throw 'include';
-}else{
-included.push(file);
-};
-(function(fs){
-(function(src){
-__result__ = read(src);throw 'include';
-})(fs.readFileSync(file.slice(1,-1),"utf-8"));
-})(require("fs"));
-}catch(err){
-if(err === 'include'){
-return __result__;
-}else{
-throw err;
-}
-}
-};
-});
-};
-var macros = {};
 var compile = (function(exp){
 {
 try{
@@ -1319,16 +1242,6 @@ __result__ = ("[" + array.join(" , ") + "]");throw 'compile';
 })(exp.slice(1).map(compile));
 };
 }else{
-if((("ir::defmacro" === exp[0]))){
-{
-(function(name,args,statements){
-(function(macro){
-macros[name] = eval(macro);
-__result__ = ("/* MACRO: " + name + "\n" + macro + "\n */");throw 'compile';
-})(("(function(" + args.join(",") + "){\n" + statements.join(";\n") + ";\n})"));
-})(compile(exp[1]),exp[2].map(compile),exp.slice(3).map(compile));
-};
-}else{
 if((("ir::quote" === exp[0]))){
 {
 (function(arg){
@@ -1338,27 +1251,11 @@ __result__ = JSON.stringify(arg);throw 'compile';
 }else{
 if((("ir::backquote" === exp[0]))){
 {
-__result__ = ("[]" + macroExpand(exp[1]));throw 'compile';
-};
-}else{
-if((("ir::include" === exp[0]))){
-{
-(function(module){
-if((0 === module.length)){
-__result__ = "";throw 'compile';
-}else{
-__result__ = ("/** " + exp[1] + " **/{\n" + module.join(";\n") + ";\n}");throw 'compile';
-};
-})(include(compile(exp[1])).map(compile));
+__result__ = ("[]" + expandBackquote(exp[1]));throw 'compile';
 };
 }else{
 if(true){
 {
-if((exp[0] in macros)){
-{
-__result__ = compile(macros[exp[0]].apply(this,exp.slice(1)));throw 'compile';
-};
-}else{
 if((func.slice(0,2) === ".-")){
 {
 (function(args){
@@ -1402,11 +1299,192 @@ __result__ = (func + "(" + exp.slice(1).map(compile).join(",") + ")");throw 'com
 };
 };
 };
+}catch(err){
+if(err === 'compile'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+var expandBackquote = (function(exp){
+{
+try{
+if(! Array.isArray(exp)){
+{
+__result__ = ("'" + exp + "'");throw 'expandBackquote';
+};
+}else{
+if((exp.length === 0)){
+{
+__result__ = "";throw 'expandBackquote';
+};
+}else{
+if((Array.isArray(exp[0]) && (exp[0][0] === "ir::unquote"))){
+{
+__result__ = (".concat([" + compile(exp[0][1]) + "])" + expandBackquote(exp.slice(1)));throw 'expandBackquote';
+};
+}else{
+if((Array.isArray(exp[0]) && (exp[0][0] === "ir::splice"))){
+{
+__result__ = (".concat(" + compile(exp[0][1]) + ")" + expandBackquote(exp.slice(1)));throw 'expandBackquote';
+};
+}else{
+if(true){
+{
+if(Array.isArray(exp[0])){
+__result__ = (".concat([[]" + expandBackquote(exp[0]) + "])" + expandBackquote(exp.slice(1)));throw 'expandBackquote';
+}else{
+__result__ = (".concat([" + expandBackquote(exp[0]) + "])" + expandBackquote(exp.slice(1)));throw 'expandBackquote';
+};
+};
+};
+};
 };
 };
 };
 }catch(err){
-if(err === 'compile'){
+if(err === 'expandBackquote'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+};
+/** "src/precompile.l" **/{
+;
+;
+/** "src/include.l" **/{
+;
+;
+var included = [];
+var include = (function(file){
+{
+try{
+if((0 <= included.indexOf(file))){
+__result__ = [];throw 'include';
+}else{
+included.push(file);
+};
+(function(fs){
+(function(src){
+__result__ = read(src);throw 'include';
+})(fs.readFileSync(file.slice(1,-1),"utf-8"));
+})(require("fs"));
+}catch(err){
+if(err === 'include'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+};
+var macros = {};
+var precompile = (function(exp){
+{
+try{
+if((! Array.isArray(exp) || (exp.length === 0))){
+{
+__result__ = exp;throw 'precompile';
+};
+}else{
+if((exp[0] === "ir::quote")){
+{
+__result__ = exp;throw 'precompile';
+};
+}else{
+if((exp[0] === "ir::backquote")){
+{
+__result__ = preMacroExpand(exp);throw 'precompile';
+};
+}else{
+if((exp[0] === "ir::defmacro")){
+{
+(function(name,args,body){
+(function(macro){
+macros[name] = eval(macro);
+__result__ = ("/** MACRO: " + name + "\n" + macro + "\n **/");throw 'precompile';
+})(("(function(" + args.join(",") + "){\n" + body.join(";\n") + ";\n})"));
+})(exp[1],exp[2],exp.slice(3).map((function(e){
+return compile(precompile(e));
+})));
+};
+}else{
+if((exp[0] === "ir::include")){
+{
+(function(module){
+if((0 === module.length)){
+__result__ = "";throw 'precompile';
+}else{
+__result__ = [].concat(['ir::block']).concat([("/**" + exp[1] + "**/")]).concat(module);throw 'precompile';
+};
+})(include(exp[1]).map(precompile));
+};
+}else{
+if((exp[0] in macros)){
+{
+__result__ = precompile(macros[exp[0]].apply(this,exp.slice(1)));throw 'precompile';
+};
+}else{
+if(true){
+{
+__result__ = exp.map(precompile);throw 'precompile';
+};
+};
+};
+};
+};
+};
+};
+};
+}catch(err){
+if(err === 'precompile'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+var preMacroExpand = (function(exp){
+{
+try{
+if(! Array.isArray(exp)){
+{
+__result__ = exp;throw 'preMacroExpand';
+};
+}else{
+if((exp.length === 0)){
+{
+__result__ = exp;throw 'preMacroExpand';
+};
+}else{
+if((Array.isArray(exp[0]) && (exp[0][0] === "ir::unquote"))){
+{
+__result__ = [].concat([[].concat(["ir::unquote"]).concat([precompile(exp[0][1])])]).concat(preMacroExpand(exp.slice(1)));throw 'preMacroExpand';
+};
+}else{
+if((Array.isArray(exp[0]) && (exp[0][0] === "ir::splice"))){
+{
+__result__ = [].concat([[].concat(["ir::splice"]).concat([precompile(exp[0][1])])]).concat(preMacroExpand(exp.slice(1)));throw 'preMacroExpand';
+};
+}else{
+if(true){
+{
+__result__ = [preMacroExpand(exp[0])].concat(preMacroExpand(exp.slice(1)));throw 'preMacroExpand';
+};
+};
+};
+};
+};
+};
+}catch(err){
+if(err === 'preMacroExpand'){
 return __result__;
 }else{
 throw err;
@@ -1434,7 +1512,26 @@ throw err;
 };
 })
  */;
-eval(compile(read(("(ir::function ()(ir::block " + "(ir::defmacro ir::rest-args (rest start)  (ir::return `(ir::block (ir::var ,rest '())		 (ir::for (ir::var i ,start) (ir::< i (.-length arguments)) (ir::set i (ir::+ i 1))			  (ir::block (.push ,rest (ir::nth arguments i)))))))(ir::defmacro defmacro (name args)  (ir::rest-args body 2)  (ir::var bodypos (.indexOf args ':rest))  (ir::if (ir::<= 0 bodypos)	  (ir::block	      (ir::return `(defmacro ,name ,(.slice args 0 bodypos)			     (ir::rest-args ,(ir::nth args (ir::+ bodypos 1)) ,bodypos)			     ,@body))))  (ir::return `(ir::defmacro ,name ,args (ir::named-block ,name ,@body))))(defmacro return	(:rest args) (ir::return `(ir::return ,@args)))(defmacro def		(:rest args) (return `(ir::var ,@args)))(defmacro block		(:rest args) (return `(ir::named-block ,@args)))(defmacro return-from	(:rest args) (return `(ir::return-from ,@args)))(defmacro typeof	(:rest args) (return `(ir::typeof ,@args)))(defmacro yield		(:rest args) (return `(ir::yield ,@args)))(defmacro throw		(:rest args) (return `(ir::throw ,@args)))(defmacro break		(:rest args) (return `(ir::break ,@args)))(defmacro continue	(:rest args) (return `(ir::continue ,@args)))(defmacro member	(:rest args) (return `(ir::in ,@args)))(defmacro eql		(:rest args) (return `(ir::=== ,@args)))(defmacro eq		(:rest args) (return `(ir::== ,@args)))(defmacro not		(:rest args) (return `(ir::! ,@args)))(defmacro and		(:rest args) (return `(ir::&& ,@args)))(defmacro or		(:rest args) (return `(ir::|| ,@args)))(defmacro +		(:rest args) (return `(ir::+ ,@args)))(defmacro ++		(:rest args) (return `(ir::++ ,@args)))(defmacro -		(:rest args) (return `(ir::- ,@args)))(defmacro --		(:rest args) (return `(ir::-- ,@args)))(defmacro *		(:rest args) (return `(ir::* ,@args)))(defmacro /		(:rest args) (return `(ir::/ ,@args)))(defmacro mod		(:rest args) (return `(ir::% ,@args)))(defmacro >		(:rest args) (return `(ir::> ,@args)))(defmacro <		(:rest args) (return `(ir::< ,@args)))(defmacro >=		(:rest args) (return `(ir::>= ,@args)))(defmacro <=		(:rest args) (return `(ir::<= ,@args)))(defmacro new		(:rest args) (return `(ir::new ,@args)))(defmacro nth		(:rest args) (return `(ir::nth ,@args)))(defmacro set		(:rest args) (return `(ir::set ,@args)))(defmacro hash		(:rest args) (return `(ir::hash ,@args)))(defmacro list		(:rest args) (return `(ir::array ,@args)))(defmacro quote		(:rest args) (return `(ir::quote ,@args)))(defmacro instanceof	(:rest args) (return `(ir::instanceof ,@args)))(defmacro if (condition :rest statements)  (return    `(ir::if ,condition	     ,@(.map statements		     (ir::function (s) (ir::block (return `(ir::block ,s))))))))(defmacro when (condition :rest statements)  (return `(ir::if ,condition (ir::block ,@statements))))(defmacro unless (condition :rest statements)  (return `(ir::if (not ,condition) (ir::block ,@statements))))(defmacro lambda (args :rest body)  (def restpos (.indexOf args ':rest))  (when (<= 0 restpos)    (def rest (nth args (+ restpos 1)))    (set args (.concat (.slice args 0 restpos) (.slice args (+ restpos 2))))    (return `(lambda ,args	       (ir::rest-args ,rest (.-length args))	       ,@body)))  (def namedpos (.indexOf args ':named))  (when (<= 0 namedpos)    (def tag (nth args (+ namedpos 1)))    (set args (.concat (.slice args 0 namedpos) (.slice args (+ namedpos 2))))    (return `(lambda ,args (block ,tag ,@body))))  (return `(ir::function ,args (ir::block ,@body))))(defmacro defun (name args :rest body)  (return `(def ,name (lambda (,@args :named ,name) ,@body))))(defmacro for (condition :rest body)  (return    `(ir::for      (def ,@(nth condition 0))      ,@(.slice condition 1)      (ir::block ,@body))))(defmacro while (condition :rest body)  (return    `(ir::while ,condition (ir::block ,@body))))(defmacro let (defs :rest body)  (def vars (.map defs (lambda (def) (return (nth def 0)))))  (def vals (.map defs (lambda (def) (return (nth def 1)))))  (return `((lambda ,vars ,@body) ,@vals)))(defmacro cond (:rest statements)  (if (<= 2 (.-length statements))      (return	`(if ,(nth (nth statements 0) 0)	     (ir::block ,@(.slice (nth statements 0) 1))	     (cond ,@(.slice statements 1))))      (return	`(if ,(nth (nth statements 0) 0)	     (ir::block ,@(.slice (nth statements 0) 1))))))(defmacro case (variable :rest statements)  (let ((f (lambda (s)	     (if (eql (nth s 0) 'otherwise)		 (return `(true ,@(.slice s 1)))		 (return		   `((or ,@(.map (nth s 0)				 (lambda (v)				   (return `(eql ,v ,variable)))))		     ,@(.slice s 1)))))))    (return-from case `(cond ,@(.map statements f)))))" + "))"))));
+var transpile = (function(str){
+{
+try{
+(function(code){
+(function(expanded){
+(function(js){
+__result__ = js;throw 'transpile';
+})(compile(expanded));
+})(precompile(code));
+})(read(str));
+}catch(err){
+if(err === 'transpile'){
+return __result__;
+}else{
+throw err;
+}
+}
+};
+});
+eval(transpile(("(ir::function ()(ir::block " + "(ir::defmacro ir::rest-args (rest start)  (ir::return `(ir::block (ir::var ,rest '())		 (ir::for (ir::var i ,start) (ir::< i (.-length arguments)) (ir::set i (ir::+ i 1))			  (ir::block (.push ,rest (ir::nth arguments i)))))))(ir::defmacro defmacro (name args)  (ir::rest-args body 2)  (ir::var bodypos (.indexOf args ':rest))  (ir::if (ir::<= 0 bodypos)	  (ir::block	      (ir::return `(defmacro ,name ,(.slice args 0 bodypos)			     (ir::rest-args ,(ir::nth args (ir::+ bodypos 1)) ,bodypos)			     ,@body))))  (ir::return `(ir::defmacro ,name ,args (ir::named-block ,name ,@body))))(defmacro return	(:rest args) (ir::return `(ir::return ,@args)))(defmacro def		(:rest args) (return `(ir::var ,@args)))(defmacro block		(:rest args) (return `(ir::named-block ,@args)))(defmacro return-from	(:rest args) (return `(ir::return-from ,@args)))(defmacro typeof	(:rest args) (return `(ir::typeof ,@args)))(defmacro yield		(:rest args) (return `(ir::yield ,@args)))(defmacro throw		(:rest args) (return `(ir::throw ,@args)))(defmacro break		(:rest args) (return `(ir::break ,@args)))(defmacro continue	(:rest args) (return `(ir::continue ,@args)))(defmacro member	(:rest args) (return `(ir::in ,@args)))(defmacro eql		(:rest args) (return `(ir::=== ,@args)))(defmacro eq		(:rest args) (return `(ir::== ,@args)))(defmacro not		(:rest args) (return `(ir::! ,@args)))(defmacro and		(:rest args) (return `(ir::&& ,@args)))(defmacro or		(:rest args) (return `(ir::|| ,@args)))(defmacro +		(:rest args) (return `(ir::+ ,@args)))(defmacro ++		(:rest args) (return `(ir::++ ,@args)))(defmacro -		(:rest args) (return `(ir::- ,@args)))(defmacro --		(:rest args) (return `(ir::-- ,@args)))(defmacro *		(:rest args) (return `(ir::* ,@args)))(defmacro /		(:rest args) (return `(ir::/ ,@args)))(defmacro mod		(:rest args) (return `(ir::% ,@args)))(defmacro >		(:rest args) (return `(ir::> ,@args)))(defmacro <		(:rest args) (return `(ir::< ,@args)))(defmacro >=		(:rest args) (return `(ir::>= ,@args)))(defmacro <=		(:rest args) (return `(ir::<= ,@args)))(defmacro new		(:rest args) (return `(ir::new ,@args)))(defmacro nth		(:rest args) (return `(ir::nth ,@args)))(defmacro set		(:rest args) (return `(ir::set ,@args)))(defmacro hash		(:rest args) (return `(ir::hash ,@args)))(defmacro list		(:rest args) (return `(ir::array ,@args)))(defmacro quote		(:rest args) (return `(ir::quote ,@args)))(defmacro instanceof	(:rest args) (return `(ir::instanceof ,@args)))(defmacro if (condition :rest statements)  (return    `(ir::if ,condition	     ,@(.map statements		     (ir::function (s) (ir::block (return `(ir::block ,s))))))))(defmacro when (condition :rest statements)  (return `(ir::if ,condition (ir::block ,@statements))))(defmacro unless (condition :rest statements)  (return `(ir::if (not ,condition) (ir::block ,@statements))))(defmacro lambda (args :rest body)  (def restpos (.indexOf args ':rest))  (when (<= 0 restpos)    (def rest (nth args (+ restpos 1)))    (set args (.concat (.slice args 0 restpos) (.slice args (+ restpos 2))))    (return `(lambda ,args	       (ir::rest-args ,rest (.-length args))	       ,@body)))  (def namedpos (.indexOf args ':named))  (when (<= 0 namedpos)    (def tag (nth args (+ namedpos 1)))    (set args (.concat (.slice args 0 namedpos) (.slice args (+ namedpos 2))))    (return `(lambda ,args (block ,tag ,@body))))  (return `(ir::function ,args (ir::block ,@body))))(defmacro defun (name args :rest body)  (return `(def ,name (lambda (,@args :named ,name) ,@body))))(defmacro for (condition :rest body)  (return    `(ir::for      (def ,@(nth condition 0))      ,@(.slice condition 1)      (ir::block ,@body))))(defmacro while (condition :rest body)  (return    `(ir::while ,condition (ir::block ,@body))))(defmacro let (defs :rest body)  (def vars (.map defs (lambda (d) (return (nth d 0)))))  (def vals (.map defs (lambda (d) (return (nth d 1)))))  (return `((lambda ,vars ,@body) ,@vals)))(defmacro cond (:rest statements)  (if (<= 2 (.-length statements))      (return	`(if ,(nth (nth statements 0) 0)	     (ir::block ,@(.slice (nth statements 0) 1))	     (cond ,@(.slice statements 1))))      (return	`(if ,(nth (nth statements 0) 0)	     (ir::block ,@(.slice (nth statements 0) 1))))))(defmacro case (variable :rest statements)  (let ((f (lambda (s)	     (if (eql (nth s 0) 'otherwise)		 (return `(true ,@(.slice s 1)))		 (return		   `((or ,@(.map (nth s 0)				 (lambda (v)				   (return `(eql ,v ,variable)))))		     ,@(.slice s 1)))))))    (return-from case `(cond ,@(.map statements f)))))" + "))")));
 var main = (function(){
 {
 try{
@@ -1442,7 +1539,7 @@ try{
 for(var i = 0;(i < scripts.length);i = (i + 1)){
 if(("text/lisp" === scripts[i].type)){
 (function(src){
-eval((compile(read(("(ir::function () (ir::block " + src + "))"))) + ";"));
+eval((transpile(("(ir::function () (ir::block " + src + "))")) + ";"));
 })(scripts[i].innerHTML);
 };
 };
