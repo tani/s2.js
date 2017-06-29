@@ -4,7 +4,7 @@ LISP to JavaScript. Self-hosting.
 In the webpage...
 
 ```
-<script type="text/javascript" src="examples/b6.js"></script>
+<script type="text/javascript" src="b6.js"></script>
 ```
 
 Now You can write any lisp code in your browser!
